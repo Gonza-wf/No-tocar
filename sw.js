@@ -1,4 +1,4 @@
-const CACHE_NAME = 'no-tocar-v2';
+const CACHE_NAME = 'no-tocar-v3';
 const ASSETS = [
     '/',
     '/index.html',
