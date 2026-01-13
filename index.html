@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="NO TOCAR">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="Un botón que no deberías tocar. No lo toques.">
+    <title>NO TOCAR</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23000' width='100' height='100'/><circle cx='50' cy='50' r='35' fill='%23cc0000'/><text x='50' y='58' text-anchor='middle' fill='white' font-size='14' font-family='monospace' font-weight='bold'>NO</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: #000;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            transition: all 0.5s ease;
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        body.flipped {
+            transform: rotate(180deg);
+        }
+
+        body.white-screen {
+            background: #fff;
+        }
+
+        body.glitch {
+            animation: glitch 0.3s ease;
+        }
+
+        @keyframes glitch {
+            0%, 100% { filter: none; }
+            20% { filter: invert(1) hue-rotate(90deg); }
+            40% { filter: invert(0) hue-rotate(180deg); }
+            60% { filter: invert(1) hue-rotate(270deg); }
+            80% { filter: invert(0); }
+        }
+
+        #counter {
+            position: fixed;
+            top: 20px;
+            top: calc(20px + env(safe-area-inset-top));
+            left: 20px;
+            color: #333;
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
+        #achievements {
+            position: fixed;
+            top: 50px;
+            top: calc(50px + env(safe-area-inset-top));
+            left: 20px;
+            color: #666;
+            font-size: 10px;
+            max-width: 200px;
+            max-height: 40vh;
+            overflow: hidden;
+        }
+
+        .achievement {
+            background: #111;
+            padding: 5px 10px;
+            margin: 5px 0;
+            border-left: 2px solid #ff0000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        #main-button {
+            background: #cc0000;
+            color: white;
+            border: none;
+            padding: 40px 60px;
+            font-size: 32px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        #main-button:hover {
+            background: #ff0000;
+        }
+
+        #main-button:active {
+            transform: scale(0.98);
+        }
+
+        #main-button.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #main-button.sad {
+            border-radius: 50%;
+            padding: 50px;
+        }
+
+        #fake-button {
+            background: #cc0000;
+            color: white;
+            border: none;
+            padding: 20px 30px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            cursor: pointer;
+            position: fixed;
+            bottom: 100px;
+            right: 50px;
+            display: none;
+            z-index: 5;
+        }
+
+        #fake-button:hover::after {
+            content: "jaja no";
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #666;
+        }
+
+        #judgment {
+            position: fixed;
+            bottom: 30px;
+            bottom: calc(30px + env(safe-area-inset-bottom));
+            color: #333;
+            font-size: 11px;
+            text-align: center;
+            font-style: italic;
+            padding: 0 20px;
+        }
+
+        #final-message {
+            display: none;
+            text-align: center;
+            color: #333;
+        }
+
+        #final-message h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #final-message p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        #final-surrender,
+        #final-speedrun,
+        #final-button-wins {
+            display: none;
+            text-align: center;
+            line-height: 1.6;
+            animation: fadeIn 2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes buttonEscape {
+            0% { transform: scale(0.4); opacity: 1; }
+            50% { transform: scale(0.6) rotate(10deg); }
+            70% { transform: scale(0.3) translateY(-50px); opacity: 0.5; }
+            100% { transform: scale(0) translateY(-200px); opacity: 0; }
+        }
+
+        #main-button.escaping {
+            animation: buttonEscape 1.5s ease forwards;
+            pointer-events: none;
+        }
+
+        .shake {
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px) rotate(-1deg); }
+            75% { transform: translateX(5px) rotate(1deg); }
+        }
+
+        #insult {
+            position: fixed;
+            top: 50%;
+            margin-top: 100px;
+            color: #ff0000;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            text-align: center;
+            padding: 0 20px;
+            max-width: 300px;
+        }
+
+        #install-hint {
+            position: fixed;
+            bottom: 60px;
+            color: #222;
+            font-size: 9px;
+            opacity: 0;
+            transition: opacity 2s;
+        }
+
+        body.ready #install-hint {
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div id="counter">toques de desobediencia: 0</div>
+    <div id="achievements"></div>
+    
+    <button id="main-button">NO TOCAR</button>
+    <button id="fake-button">ESTE SÍ</button>
+    
+    <div id="insult"></div>
+    <div id="judgment"></div>
+    <div id="install-hint">agregá a inicio para máxima decepción</div>
+    
+    <div id="final-message">
+        <h1>Ganaste.</h1>
+        <p>No hay premio.<br>Tocaste un botón 50 veces.<br><br>¿Qué esperabas?<br><br><small style="color:#444">esto dice más de vos que de mí</small></p>
+    </div>
+
+    <div id="final-surrender">
+        <p style="color:#333;font-size:14px;">Te fuiste.</p>
+        <p style="color:#555;font-size:12px;margin-top:20px;">El botón sigue acá.<br>Vos no.</p>
+        <p style="color:#666;font-size:11px;margin-top:40px;font-style:italic;">Esto era lo correcto.</p>
+        <p style="color:#444;font-size:9px;margin-top:60px;">final 2 de 4</p>
+    </div>
+
+    <div id="final-speedrun">
+        <h1 style="color:#ff0000;font-size:20px;">Wow.</h1>
+        <p style="color:#666;font-size:13px;margin-top:20px;">50 toques en menos de 20 segundos.</p>
+        <p style="color:#555;font-size:12px;margin-top:30px;">No sos curioso.<br>Sos ansioso.</p>
+        <p style="color:#444;font-size:11px;margin-top:40px;">Esto no es un logro.<br>Es un diagnóstico.</p>
+        <p style="color:#333;font-size:9px;margin-top:60px;">final 3 de 4</p>
+    </div>
+
+    <div id="final-button-wins">
+        <p style="color:#222;font-size:16px;">El botón se fue.</p>
+        <p style="color:#444;font-size:12px;margin-top:30px;">No vos.<br>Él.</p>
+        <p style="color:#555;font-size:11px;margin-top:40px;">Decidió que no valía la pena.</p>
+        <p style="color:#666;font-size:10px;margin-top:50px;font-style:italic;">No todos los finales son para vos.</p>
+        <p style="color:#333;font-size:9px;margin-top:60px;">final 4 de 4</p>
+    </div>
+
+    <script>
+        // Service Worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((reg) => {
+                        console.log('SW registrado:', reg.scope);
+                    })
+                    .catch((err) => {
+                        console.log('SW falló:', err);
+                    });
+            });
+        }
+
+        // Audio - inicializado en primer toque
+        let audioCtx = null;
+        
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // Resume si estaba suspendido (política de autoplay)
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+        
+        function playAnnoyingSound(type = 'click') {
+            if (!audioCtx) return;
+            
+            try {
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                const sounds = {
+                    click: { freq: 150, duration: 0.1, wave: 'square' },
+                    error: { freq: 80, duration: 0.2, wave: 'sawtooth' },
+                    judgment: { freq: 200, duration: 0.05, wave: 'square' },
+                    victory: { freq: 440, duration: 0.5, wave: 'sine' },
+                    sad: { freq: 100, duration: 0.3, wave: 'triangle' },
+                    angry: { freq: 60, duration: 0.15, wave: 'sawtooth' }
+                };
+                
+                const sound = sounds[type] || sounds.click;
+                oscillator.frequency.value = sound.freq;
+                oscillator.type = sound.wave;
+                gainNode.gain.value = 0.1;
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + sound.duration);
+            } catch(e) {
+                // Silenciar errores de audio
+            }
+        }
+
+        let touches = 0;
+        let buttonOffset = { x: 0, y: 0 };
+        let buttonScale = 1;
+        let achievements = [];
+        let startTime = null;
+        let lastTouchTime = null;
+        let inactivityTimer = null;
+        let gameEnded = false;
+        const MIN_SCALE = 0.4;
+        const SPEEDRUN_TIME = 20000; // 20 segundos
+        const INACTIVITY_TIME = 45000; // 45 segundos
+        
+        const button = document.getElementById('main-button');
+        const counter = document.getElementById('counter');
+        const achievementsDiv = document.getElementById('achievements');
+        const fakeButton = document.getElementById('fake-button');
+        const insultDiv = document.getElementById('insult');
+        const judgmentDiv = document.getElementById('judgment');
+        const finalMessage = document.getElementById('final-message');
+        const finalSurrender = document.getElementById('final-surrender');
+        const finalSpeedrun = document.getElementById('final-speedrun');
+        const finalButtonWins = document.getElementById('final-button-wins');
+
+        // FINAL 2: El que se rinde (inactividad)
+        function startInactivityTimer() {
+            if (inactivityTimer) clearTimeout(inactivityTimer);
+            if (gameEnded || touches === 0) return;
+            
+            inactivityTimer = setTimeout(() => {
+                if (!gameEnded && touches > 0 && touches < 50) {
+                    triggerFinalSurrender();
+                }
+            }, INACTIVITY_TIME);
+        }
+
+        function triggerFinalSurrender() {
+            gameEnded = true;
+            playAnnoyingSound('sad');
+            
+            // Fade out todo lentamente
+            button.style.transition = 'opacity 3s ease';
+            button.style.opacity = '0';
+            fakeButton.style.display = 'none';
+            insultDiv.style.opacity = '0';
+            judgmentDiv.style.opacity = '0';
+            counter.style.opacity = '0';
+            achievementsDiv.style.opacity = '0';
+            
+            setTimeout(() => {
+                button.style.display = 'none';
+                counter.style.display = 'none';
+                achievementsDiv.style.display = 'none';
+                finalSurrender.style.display = 'block';
+            }, 3000);
+        }
+
+        // FINAL 3: Speedrunner
+        function checkSpeedrun() {
+            if (touches === 50 && startTime) {
+                const elapsed = Date.now() - startTime;
+                if (elapsed < SPEEDRUN_TIME) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function triggerFinalSpeedrun() {
+            gameEnded = true;
+            vibrate([100, 50, 100, 50, 100, 50, 100]);
+            playAnnoyingSound('angry');
+            
+            button.style.display = 'none';
+            fakeButton.style.display = 'none';
+            insultDiv.style.display = 'none';
+            judgmentDiv.style.display = 'none';
+            counter.style.display = 'none';
+            achievementsDiv.style.display = 'none';
+            document.body.classList.remove('white-screen', 'flipped');
+            
+            finalSpeedrun.style.display = 'block';
+        }
+
+        // FINAL 4: El botón gana
+        function checkButtonWins() {
+            // Se activa cuando el botón está en escala mínima
+            return buttonScale <= MIN_SCALE && touches >= 35;
+        }
+
+        function triggerFinalButtonWins() {
+            gameEnded = true;
+            
+            // El botón "escapa"
+            button.classList.add('escaping');
+            playAnnoyingSound('sad');
+            vibrate([500]);
+            
+            setTimeout(() => {
+                button.style.display = 'none';
+                fakeButton.style.display = 'none';
+                insultDiv.style.display = 'none';
+                judgmentDiv.style.display = 'none';
+                counter.style.display = 'none';
+                achievementsDiv.style.display = 'none';
+                document.body.classList.remove('white-screen', 'flipped');
+                document.body.style.background = '#000';
+                
+                finalButtonWins.style.display = 'block';
+            }, 1500);
+        }
+
+        const buttonTexts = {
+            0: 'NO TOCAR',
+            1: 'te dije q no',
+            3: 'en serio?',
+            5: 'pará',
+            7: 'basta',
+            10: 'ok ya entendí',
+            15: 'sos insoportable',
+            20: 'te odio',
+            25: 'BASTA',
+            30: '...',
+            35: 'ok',
+            40: 'hacé lo q quieras',
+            45: 'ya no me importa',
+            50: 'chau'
+        };
+
+        // Insultos escalados por nivel de daño emocional
+        const insultsLight = [
+            'te falta atención en tu vida?',
+            'aburrido/a?',
+            'no tenés nada mejor q hacer?',
+            'wow qué rebelde',
+            'el botón está decepcionado'
+        ];
+
+        const insultsMedium = [
+            'mamá no te quiso suficiente?',
+            'impresionante nivel de terquedad',
+            'profesional de ignorar instrucciones',
+            'tus padres estarían orgullosos',
+            'esto es triste',
+            'buscás validación en un botón?'
+        ];
+
+        const insultsHard = [
+            'en serio no tenés nada mejor?',
+            'esto ya es patético',
+            'me das un poco de lástima',
+            'tu ex tenía razón',
+            'por esto estás solo/a un viernes',
+            'ni un botón te quiere',
+            'tocando botones a esta hora... qué vida',
+            'tu potencial desperdiciado me deprime'
+        ];
+
+        const insultsBrutal = [
+            'el vacío que sentís no se llena con clicks',
+            'esto no va a arreglar lo que está mal',
+            'seguí, total nadie te espera',
+            'cada toque es un grito de ayuda',
+            'hasta el botón te tiene lástima ya',
+            'imaginate explicar esto a alguien',
+            'el tiempo que perdiste acá no vuelve',
+            'en algún momento vas a recordar esto y sentir vergüenza',
+            'ni siquiera sos bueno/a en esto',
+            'el botón ya no siente nada. vos tampoco, no?'
+        ];
+
+        function getInsult() {
+            if (touches < 10) {
+                return insultsLight[Math.floor(Math.random() * insultsLight.length)];
+            } else if (touches < 25) {
+                return insultsMedium[Math.floor(Math.random() * insultsMedium.length)];
+            } else if (touches < 40) {
+                return insultsHard[Math.floor(Math.random() * insultsHard.length)];
+            } else {
+                return insultsBrutal[Math.floor(Math.random() * insultsBrutal.length)];
+            }
+        }
+
+        const languages = [
+            { text: 'DO NOT TOUCH', lang: 'en' },
+            { text: 'NE PAS TOUCHER', lang: 'fr' },
+            { text: 'NICHT BERÜHREN', lang: 'de' },
+            { text: 'NON TOCCARE', lang: 'it' },
+            { text: '触らないで', lang: 'ja' },
+            { text: 'НЕ ТРОГАТЬ', lang: 'ru' },
+            { text: '请勿触摸', lang: 'zh' },
+            { text: 'DOKUNMA', lang: 'tr' },
+            { text: 'NIE DOTYKAĆ', lang: 'pl' },
+            { text: 'ÄLÄ KOSKE', lang: 'fi' }
+        ];
+
+        const judgments = [
+            '',
+            'el botón te está juzgando',
+            'literalmente decía NO TOCAR',
+            'esto dice mucho de vos como persona',
+            'el botón perdió la fe en la humanidad',
+            'estadísticamente, sos un caso perdido'
+        ];
+
+        function addAchievement(text) {
+            if (achievements.includes(text)) return;
+            achievements.push(text);
+            
+            const div = document.createElement('div');
+            div.className = 'achievement';
+            div.textContent = '🏆 ' + text;
+            achievementsDiv.appendChild(div);
+            playAnnoyingSound('judgment');
+            
+            // Limitar achievements visibles
+            while (achievementsDiv.children.length > 5) {
+                achievementsDiv.removeChild(achievementsDiv.firstChild);
+            }
+        }
+
+        function vibrate(pattern = [50]) {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        function updateButton() {
+            const baseTransform = `translate(${buttonOffset.x}px, ${buttonOffset.y}px) scale(${buttonScale})`;
+            button.style.transform = baseTransform;
+        }
+
+        function handleTouch() {
+            if (gameEnded) return;
+            
+            // Reset inactivity timer
+            lastTouchTime = Date.now();
+            startInactivityTimer();
+            
+            // Inicializar audio en primer toque
+            if (touches === 0) {
+                initAudio();
+                startTime = Date.now();
+                document.body.classList.add('ready');
+            }
+            
+            // FINAL 4: Chequear si el botón decide irse (antes de incrementar)
+            if (checkButtonWins() && Math.random() > 0.5) {
+                triggerFinalButtonWins();
+                return;
+            }
+            
+            touches++;
+            counter.textContent = `toques de desobediencia: ${touches}`;
+            playAnnoyingSound('click');
+            
+            // FINAL 3: Speedrunner (en toque 50)
+            if (touches === 50 && checkSpeedrun()) {
+                triggerFinalSpeedrun();
+                return;
+            }
+
+            // Actualizar texto del botón
+            if (buttonTexts[touches]) {
+                button.textContent = buttonTexts[touches];
+            }
+
+            // Achievements
+            if (touches === 1) {
+                const elapsed = Date.now() - (startTime || Date.now());
+                if (elapsed < 5000) {
+                    addAchievement('No aguantaste ni 5 segundos');
+                }
+            }
+            if (touches === 5) {
+                addAchievement('Incapaz de seguir instrucciones');
+            }
+            if (touches === 10) {
+                addAchievement('Persistencia inútil');
+            }
+            if (touches === 15) {
+                addAchievement('Profesional del botón');
+            }
+            if (touches === 25) {
+                addAchievement('Terquedad certificada');
+            }
+            if (touches === 30) {
+                addAchievement('Necesitás un hobby');
+            }
+            if (touches === 40) {
+                addAchievement('Caso clínico');
+            }
+            if (touches === 50) {
+                addAchievement('Leyenda de la desobediencia');
+            }
+
+            // Reacciones progresivas
+            switch(touches) {
+                case 2:
+                    buttonOffset.x += 1;
+                    buttonOffset.y += 1;
+                    updateButton();
+                    break;
+                    
+                case 3:
+                    vibrate([100, 50, 100]);
+                    break;
+                    
+                case 4:
+                    buttonScale = 0.9;
+                    updateButton();
+                    break;
+                    
+                case 5:
+                    fakeButton.style.display = 'block';
+                    break;
+                    
+                case 6:
+                    insultDiv.textContent = getInsult();
+                    insultDiv.style.opacity = 1;
+                    break;
+                    
+                case 8:
+                    document.body.classList.add('flipped');
+                    vibrate([200]);
+                    break;
+                    
+                case 10:
+                    button.classList.add('hidden');
+                    playAnnoyingSound('sad');
+                    setTimeout(() => {
+                        button.classList.remove('hidden');
+                        button.textContent = 'volví';
+                    }, 3000);
+                    break;
+                    
+                case 12:
+                    const lang = languages[Math.floor(Math.random() * languages.length)];
+                    button.textContent = lang.text;
+                    break;
+                    
+                case 15:
+                    buttonOffset.x += 30;
+                    updateButton();
+                    playAnnoyingSound('angry');
+                    break;
+                    
+                case 18:
+                    document.body.classList.remove('flipped');
+                    buttonScale = 0.7;
+                    updateButton();
+                    break;
+                    
+                case 20:
+                    button.classList.add('sad');
+                    break;
+                    
+                case 22:
+                    document.body.classList.add('glitch');
+                    setTimeout(() => document.body.classList.remove('glitch'), 300);
+                    break;
+                    
+                case 25:
+                    vibrate([300, 100, 300, 100, 300]);
+                    playAnnoyingSound('angry');
+                    break;
+                    
+                case 28:
+                    button.style.opacity = '0.5';
+                    break;
+                    
+                case 30:
+                    buttonOffset.x = (Math.random() - 0.5) * 100;
+                    buttonOffset.y = (Math.random() - 0.5) * 100;
+                    updateButton();
+                    break;
+                    
+                case 35:
+                    button.style.filter = 'grayscale(1)';
+                    button.textContent = 'me rendí';
+                    break;
+                    
+                case 40:
+                    document.body.classList.add('white-screen');
+                    button.style.background = '#999';
+                    button.style.color = '#333';
+                    button.style.filter = 'none';
+                    judgmentDiv.style.color = '#000';
+                    judgmentDiv.textContent = '¿feliz ahora?';
+                    break;
+                    
+                case 45:
+                    insultDiv.textContent = getInsult();
+                    insultDiv.style.color = '#000';
+                    break;
+                    
+                case 50:
+                    gameEnded = true;
+                    if (inactivityTimer) clearTimeout(inactivityTimer);
+                    
+                    button.style.display = 'none';
+                    fakeButton.style.display = 'none';
+                    insultDiv.style.display = 'none';
+                    judgmentDiv.style.display = 'none';
+                    counter.style.display = 'none';
+                    achievementsDiv.style.display = 'none';
+                    finalMessage.style.display = 'block';
+                    playAnnoyingSound('victory');
+                    vibrate([500]);
+                    
+                    // Easter egg final
+                    setTimeout(() => {
+                        const small = document.createElement('p');
+                        small.innerHTML = '<br><br><small style="color:#888;font-size:10px">tocaste 50 veces. el tiempo promedio de una persona normal es: no tocar.</small>';
+                        finalMessage.appendChild(small);
+                    }, 3000);
+                    
+                    // Hint muy sutil de que hay más
+                    setTimeout(() => {
+                        const hint = document.createElement('p');
+                        hint.innerHTML = '<small style="color:#222;font-size:8px;">final 1 de 4</small>';
+                        finalMessage.appendChild(hint);
+                    }, 8000);
+                    break;
+            }
+
+            // Efectos continuos después de ciertos puntos
+            if (touches > 2 && touches < 50) {
+                buttonOffset.x += (Math.random() - 0.5) * 3;
+                buttonOffset.y += (Math.random() - 0.5) * 3;
+                updateButton();
+            }
+
+            if (touches > 5 && touches % 3 === 0) {
+                insultDiv.textContent = getInsult();
+                insultDiv.style.opacity = 1;
+            }
+
+            if (touches > 10) {
+                buttonScale = Math.max(MIN_SCALE, buttonScale - 0.015);
+                updateButton();
+            }
+            
+            // Cuando llega al mínimo, el botón empieza a "temblar" de miedo
+            if (buttonScale <= MIN_SCALE && !button.classList.contains('escaping')) {
+                button.style.animation = 'shake 0.2s infinite';
+            }
+
+            // Glitch random después de 20
+            if (touches > 20 && Math.random() > 0.7) {
+                document.body.classList.add('glitch');
+                setTimeout(() => document.body.classList.remove('glitch'), 200);
+            }
+
+            // Actualizar judgment
+            const judgmentIndex = Math.min(Math.floor(touches / 10), judgments.length - 1);
+            if (judgmentDiv.style.display !== 'none') {
+                judgmentDiv.textContent = judgments[judgmentIndex];
+            }
+
+            // Shake effect
+            button.classList.add('shake');
+            setTimeout(() => button.classList.remove('shake'), 500);
+        }
+
+        // Event listeners
+        button.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleTouch();
+        });
+        
+        button.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            handleTouch();
+        }, { passive: false });
+
+        fakeButton.addEventListener('click', () => {
+            fakeButton.textContent = 'jaja no';
+            playAnnoyingSound('error');
+            vibrate([50, 50, 50]);
+            setTimeout(() => {
+                fakeButton.textContent = 'ESTE SÍ';
+            }, 1000);
+        });
+
+        // Easter egg: click fuera del botón
+        document.body.addEventListener('click', (e) => {
+            if (e.target === document.body && touches > 0 && touches < 50) {
+                judgmentDiv.textContent = 'buscando el botón? patético';
+                playAnnoyingSound('sad');
+            }
+        });
+
+        // Prevenir zoom en mobile
+        document.addEventListener('gesturestart', (e) => e.preventDefault());
+        document.addEventListener('dblclick', (e) => e.preventDefault());
+        
+        // Prevenir pull-to-refresh
+        document.body.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
