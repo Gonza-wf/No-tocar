@@ -370,6 +370,10 @@
             if (inactivityTimer) clearTimeout(inactivityTimer);
             if (gameEnded || touches === 0) return;
             
+            // Si el botón ya está listo para irse, no activar rendición
+            // El botón tiene prioridad - él decide, no el usuario
+            if (buttonScale <= MIN_SCALE) return;
+            
             inactivityTimer = setTimeout(() => {
                 if (!gameEnded && touches > 0 && touches < 50) {
                     triggerFinalSurrender();
@@ -381,21 +385,26 @@
             gameEnded = true;
             playAnnoyingSound('sad');
             
-            // Fade out todo lentamente
-            button.style.transition = 'opacity 3s ease';
-            button.style.opacity = '0';
-            fakeButton.style.display = 'none';
-            insultDiv.style.opacity = '0';
-            judgmentDiv.style.opacity = '0';
+            // El counter se va primero - pequeño gesto, más impacto
+            counter.style.transition = 'opacity 1s ease';
             counter.style.opacity = '0';
-            achievementsDiv.style.opacity = '0';
+            
+            // Después el resto, más lento
+            setTimeout(() => {
+                button.style.transition = 'opacity 3s ease';
+                button.style.opacity = '0';
+                fakeButton.style.display = 'none';
+                insultDiv.style.opacity = '0';
+                judgmentDiv.style.opacity = '0';
+                achievementsDiv.style.opacity = '0';
+            }, 800);
             
             setTimeout(() => {
                 button.style.display = 'none';
                 counter.style.display = 'none';
                 achievementsDiv.style.display = 'none';
                 finalSurrender.style.display = 'block';
-            }, 3000);
+            }, 4000);
         }
 
         // FINAL 3: Speedrunner
@@ -433,6 +442,9 @@
 
         function triggerFinalButtonWins() {
             gameEnded = true;
+            
+            // Limpiar animación de temblor antes de escapar
+            button.style.animation = '';
             
             // El botón "escapa"
             button.classList.add('escaping');
@@ -492,7 +504,7 @@
             'en serio no tenés nada mejor?',
             'esto ya es patético',
             'me das un poco de lástima',
-            'tu ex tenía razón',
+            'esto explica mucho de tu vida',
             'por esto estás solo/a un viernes',
             'ni un botón te quiere',
             'tocando botones a esta hora... qué vida',
